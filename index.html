@@ -1,0 +1,2035 @@
+<!-- Calculateur Crédit Immobilier V2 (design v5) — MoneyRadar -->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+
+/* ===================================================
+   V5 — "Final" v2 (flush)
+   - Seuls le hero result et le détail ligne-par-ligne ont un fond
+   - Tout le reste vit directement sur le fond noir de la page
+   - Séparation par hairlines / espacements / accents typographiques
+   - Variété des traitements pour casser la répétition
+   - Container queries (≥720px desktop / <720px compact)
+   =================================================== */
+
+.v5 {
+  container-type: inline-size;
+  --teal: #00F5C0;
+  --orange: #FF9F43;
+  --red: #FF3B4E;
+  --purple: #A855F7;
+  --blue: #1060C4;
+  --violet: #8B5CF6;
+  --gold: #FFD700;
+
+  /* DARK */
+  --bg: #0A0E18;
+  --bg-2: #131A2F;
+  --bg-3: #1A2440;
+  --border: rgba(255, 255, 255, 0.10);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-faint: rgba(255, 255, 255, 0.04);
+
+  --fg: #FFFFFF;
+  --fg-2: #ECF0F8;
+  --fg-3: #B8C5DC;
+  --fg-4: #8C9AB5;
+  --accent: var(--teal);
+
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--fg-2);
+  line-height: 1.5;
+}
+.v5[data-theme="light"] {
+  --bg: #FAFAF7;
+  --bg-2: #FFFFFF;
+  --bg-3: #F2F3EE;
+  --border: #E2E4DC;
+  --border-soft: #ECEEE7;
+  --border-faint: #F2F3EE;
+
+  --fg: #0A0E18;
+  --fg-2: #1A1F2E;
+  --fg-3: #3A4154;
+  --fg-4: #6B7588;
+  --accent: #008C64;
+  --teal: #008C64;
+}
+
+.v5, .v5 * { box-sizing: border-box; }
+.v5 .mric-anim { opacity: 1; }
+.v5 .inn { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+.v5 .inn-wide { max-width: 1280px; margin: 0 auto; padding: 0 24px; }
+
+/* ========== HERO TOP ========== */
+.v5 .mric-hero {
+  background: var(--bg);
+  padding: 64px 24px 48px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+  position: relative;
+}
+.v5 .mric-hero::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 245, 192, 0.10), transparent 65%);
+  pointer-events: none;
+}
+.v5[data-theme="light"] .mric-hero::before {
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(0, 168, 120, 0.06), transparent 65%);
+}
+.v5 .mric-hero > * { position: relative; z-index: 1; }
+.v5 .mric-hero .inn { padding: 0; }
+.v5 .mric-hero-logo {
+  height: 28px; width: auto; margin: 0 auto 28px;
+  display: block; opacity: 0.95;
+  justify-self: center;
+}
+.v5[data-theme="light"] .mric-hero-logo { filter: invert(1) brightness(0.3); }
+.v5 .mric-hero h1 {
+  font-size: clamp(32px, 4.8vw, 56px);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  color: var(--fg);
+  max-width: 820px;
+  margin: 0 auto 18px;
+}
+.v5 .mric-hero h1 em { font-style: normal; color: var(--accent); }
+.v5 .mric-hero-sub {
+  font-size: clamp(15px, 1.5vw, 17px);
+  color: var(--fg-3);
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.v5 .mric-hero-sub strong { color: var(--fg-2); font-weight: 600; }
+
+/* ========== TOOL SECTION ========== */
+.v5 .mric-tool-section {
+  background: var(--bg);
+  padding: 48px 0 80px;
+}
+.v5 .mric-tool-section::before { display: none; }
+.v5 .mric-tool-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+@container (min-width: 900px) {
+  .v5 .mric-tool-grid {
+    grid-template-columns: 360px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+}
+.v5 .mric-results-col { display: contents; }
+
+/* Placement desktop : form sidebar + hero result en row 1, le reste pleine largeur */
+@container (min-width: 900px) {
+  .v5 .mric-form-col { grid-column: 1; grid-row: 1; position: sticky; top: 24px; }
+  .v5 .mric-results { display: contents; }
+  .v5 .mric-results > .mric-result-block { grid-column: 2; grid-row: 1; }
+  .v5 .mric-results > *:not(.mric-result-block) { grid-column: 1 / -1; }
+}
+
+/* ========== FORMULAIRE — style E "Charbon" (sélection user) ========== */
+.v5 .mric-form-col {
+  background: #050810;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+  padding: 24px 22px;
+  position: relative;
+  overflow: hidden;
+}
+.v5 .mric-form-col::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+}
+.v5[data-theme="light"] .mric-form-col {
+  background: var(--bg-2);
+  border-color: var(--border);
+}
+.v5 .mric-form-col .lbl {
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.v5[data-theme="light"] .mric-form-col .lbl {
+  border-bottom-color: var(--border-soft);
+}
+.v5 .mric-form-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  margin-bottom: 20px;
+}
+.v5 .mric-form-sep-label {
+  display: none;
+}
+.v5 .mric-field label {
+  display: block;
+  font-size: 11px; font-weight: 700;
+  color: var(--fg-3);
+  margin-bottom: 7px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.v5 .mric-input-wrap { position: relative; }
+.v5 .mric-input-wrap input,
+.v5 .mric-input-wrap select {
+  width: 100%;
+  padding: 13px 42px 13px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  background: #0A0E18;
+  color: var(--fg);
+  font-size: 16px; font-weight: 600;
+  font-family: inherit;
+  transition: all 0.18s ease;
+}
+.v5[data-theme="light"] .mric-input-wrap input,
+.v5[data-theme="light"] .mric-input-wrap select {
+  background: #fff;
+  border-color: var(--border);
+}
+.v5 .mric-input-wrap input::-webkit-outer-spin-button,
+.v5 .mric-input-wrap input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.v5 .mric-input-wrap input:focus, .v5 .mric-input-wrap select:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0, 245, 192, 0.15);
+}
+.v5 .mric-input-wrap select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-right: 36px; }
+.v5 .mric-input-suffix {
+  position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+  color: var(--fg-4); font-weight: 600; font-size: 13px;
+  pointer-events: none;
+}
+.v5 .mric-field-hint {
+  font-size: 11.5px; color: var(--fg-4);
+  margin-top: 6px; line-height: 1.5;
+}
+.v5 .mric-field-hint strong { color: var(--fg-3); font-weight: 600; }
+
+.v5 .mric-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 15px 20px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 10px;
+  font-size: 14.5px; font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  letter-spacing: -0.005em;
+  transition: all 0.18s ease;
+}
+.v5[data-theme="light"] .mric-btn { color: #fff; }
+.v5 .mric-btn:hover { background: #00d6a8; transform: translateY(-1px); }
+.v5[data-theme="light"] .mric-btn:hover { background: #006b4e; }
+.v5 .mric-btn::before { display: none; }
+
+/* ========== RÉSULTATS — DISPLAY CONTENTS ========== */
+.v5 .mric-results { display: none; }
+.v5 .mric-results.mric-visible { display: contents; }
+
+/* ========== HERO RESULT (sans card — flush sur le fond, centré) ========== */
+.v5 .mric-result-block {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  overflow: visible;
+  position: relative;
+  text-align: center;
+}
+.v5 .mric-result-block::before {
+  content: ""; position: absolute; top: -2px; left: 30%; right: 30%;
+  height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--orange));
+}
+.v5 .mric-headline-card {
+  padding: 32px 0 26px;
+  text-align: center;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .mric-headline-card::before {
+  content: "VOUS REVERSEZ CHAQUE ANNÉE";
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--fg-4);
+  margin-bottom: 14px;
+}
+.v5 .mric-headline-num {
+  font-size: clamp(44px, 6vw, 68px);
+  font-weight: 800;
+  color: var(--orange);
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+  font-variant-numeric: tabular-nums;
+  margin: 0 auto 12px;
+  filter: drop-shadow(0 0 32px rgba(255, 159, 67, 0.22));
+}
+.v5 .mric-headline-sub {
+  font-size: 14px;
+  color: var(--fg-3);
+  line-height: 1.55;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.v5 .mric-headline-sub strong { color: var(--fg-2); font-weight: 600; }
+
+/* 4 stats sur 4 col en compact, 2x2 en grand format quand desktop */
+.v5 .mric-stats-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+@container (min-width: 720px) {
+  .v5 .mric-stats-row.mric-4 { grid-template-columns: 1fr 1fr; }
+}
+.v5 .mric-stat {
+  padding: 16px 18px;
+  text-align: center;
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  background: transparent;
+}
+.v5 .mric-stats-row.mric-4 .mric-stat:nth-child(2n) { border-right: none; }
+.v5 .mric-stats-row.mric-4 .mric-stat:nth-last-child(-n+2) { border-bottom: none; }
+
+/* Desktop : 2x2 avec plus de respiration + grands chiffres */
+@container (min-width: 720px) {
+  .v5 .mric-stat {
+    padding: 28px 24px;
+  }
+}
+.v5 .mric-stat-num {
+  font-size: 20px; font-weight: 800; color: var(--fg);
+  line-height: 1.05; margin-bottom: 5px;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.v5 .mric-stat-num.mric-orange { color: var(--orange); }
+.v5 .mric-stat-num.mric-white { color: var(--fg); }
+.v5 .mric-stat-lbl {
+  font-size: 10px; font-weight: 700; color: var(--fg-4);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+
+/* Desktop : chiffres beaucoup plus gros pour occuper l'espace */
+@container (min-width: 720px) {
+  .v5 .mric-stat-num { font-size: 36px; margin-bottom: 10px; letter-spacing: -0.03em; }
+  .v5 .mric-stat-lbl { font-size: 11px; letter-spacing: 0.16em; }
+}
+
+/* TFD : on supprime le titre uppercase et le calendrier visuel.
+   On garde uniquement la phrase "Vous travaillez pour l'État jusqu'au X avril" + sa description. */
+.v5 .mric-tfd {
+  padding: 24px 0 8px;
+  border-top: 1px solid var(--border-soft);
+  background: transparent;
+  text-align: center;
+}
+.v5 .mric-tfd-title { display: none; }
+.v5 .mric-tfd-date {
+  font-size: clamp(17px, 1.9vw, 22px);
+  font-weight: 800; color: var(--fg);
+  line-height: 1.2; letter-spacing: -0.015em;
+  margin-bottom: 10px;
+}
+.v5 .mric-tfd-date span { color: var(--orange); }
+.v5 .mric-tfd-desc { font-size: 13px; color: var(--fg-3); line-height: 1.55; max-width: 480px; margin: 0 auto; }
+.v5 .mric-tfd-desc strong { color: var(--fg-2); font-weight: 600; }
+/* Barre de progression + calendrier 12 mois : retirés */
+.v5 .mric-tfd-year { display: none; }
+.v5 .mric-tfd-legend { display: none; }
+
+/* CTA texte sous le TFD → scroll vers le gate */
+.v5 .mric-tfd-cta { text-align: center; margin-top: 18px; }
+.v5 .mric-tfd-cta a {
+  display: inline-block;
+  color: var(--teal);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  padding: 4px 0;
+  transition: opacity .15s;
+}
+.v5 .mric-tfd-cta a:hover { opacity: 0.78; text-decoration-thickness: 2px; }
+
+/* ========== SÉPARATEUR DE SECTION (typo en gros titre) ========== */
+.v5 .mric-sep {
+  margin: 16px 0 0;
+  padding: 36px 0 0;
+  display: block;
+  text-align: left;
+  position: relative;
+}
+.v5 .mric-sep::before, .v5 .mric-sep::after { display: none; }
+.v5 .mric-sep span {
+  display: block;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-transform: none;
+  position: relative;
+  padding-bottom: 12px;
+}
+.v5 .mric-sep span::after {
+  content: "";
+  display: block;
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 40px; height: 2px;
+  background: var(--accent);
+}
+
+/* ========== BREAKDOWN 3 COLS — FLUSH (pas de bg, juste structure) ========== */
+.v5 .mric-breakdown {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 28px 0 32px;
+}
+@container (min-width: 720px) {
+  .v5 .mric-breakdown { grid-template-columns: 1fr 1fr 1fr; }
+}
+.v5 .mric-breakdown-item {
+  padding: 22px 24px 22px 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 6px;
+  align-items: start;
+  position: relative;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .mric-breakdown-item:last-child { border-bottom: none; padding-right: 0; }
+@container (min-width: 720px) {
+  .v5 .mric-breakdown-item {
+    border-bottom: none;
+    border-right: 1px solid var(--border-soft);
+    padding: 0 28px 0 0;
+  }
+  .v5 .mric-breakdown-item:first-child { padding-left: 0; }
+  .v5 .mric-breakdown-item:not(:first-child) { padding-left: 28px; }
+  .v5 .mric-breakdown-item:last-child { border-right: none; padding-right: 0; }
+}
+/* On masque les labels IR/CS/TVA (colorés) — inutiles, redondants avec le titre */
+.v5 .mric-breakdown-icon { display: none; }
+.v5 .mric-breakdown-body strong {
+  display: block;
+  font-size: 18px; font-weight: 800;
+  color: var(--fg);
+  margin: 0 0 8px;
+  letter-spacing: -0.015em;
+}
+.v5 .mric-breakdown-body span {
+  font-size: 13px; color: var(--fg-3);
+  line-height: 1.6;
+}
+.v5 .mric-breakdown-amount {
+  font-size: 32px; font-weight: 800;
+  color: var(--teal);
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-soft);
+}
+.v5 .mric-breakdown-item:nth-child(2) .mric-breakdown-amount { color: var(--orange); }
+.v5 .mric-breakdown-item:nth-child(3) .mric-breakdown-amount { color: var(--purple); }
+
+/* ========== ROW 2 : patro + Europe — FLUSH ========== */
+.v5 .mric-row-2 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  padding: 12px 0 32px;
+  border-top: 1px solid var(--border-soft);
+}
+@container (min-width: 900px) {
+  .v5 .mric-row-2 {
+    grid-template-columns: minmax(0, 4fr) minmax(0, 5fr);
+    gap: 56px;
+    padding-top: 32px;
+  }
+}
+
+/* Patro callout — flush avec accent rouge */
+.v5 .mric-patrocallout {
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--red);
+  border-radius: 0;
+  padding: 4px 0 4px 18px;
+  font-size: 13.5px;
+  color: var(--fg-3);
+  line-height: 1.65;
+  display: block;
+  position: relative;
+}
+.v5 .mric-patrocallout::before { display: none; }
+.v5 .mric-patrocallout > div:first-child { display: none; } /* hide the "!" circle icon */
+.v5 .mric-patrocallout strong {
+  display: block;
+  color: var(--fg);
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.v5 .mric-patrocallout em {
+  color: var(--orange);
+  font-style: normal;
+  font-weight: 700;
+}
+.v5 .mric-patroicon { display: none; }
+
+/* Europe — flush, no card, juste titre et bars */
+.v5 .mric-europe {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.v5 .mric-europe-title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--fg-4);
+  margin-bottom: 16px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.v5 .mric-europe-bars { display: grid; gap: 9px; }
+.v5 .mric-europe-row {
+  display: grid;
+  grid-template-columns: 90px 1fr 50px;
+  gap: 14px;
+  align-items: center;
+  font-size: 12.5px;
+}
+.v5 .mric-europe-flag { color: var(--fg-2); font-weight: 500; }
+.v5 .mric-europe-flag.mric-you { color: var(--accent); font-weight: 800; }
+.v5 .mric-europe-bar {
+  height: 7px;
+  background: var(--bg-2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.v5 .mric-europe-fill {
+  height: 100%;
+  background: var(--fg-4);
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.v5 .mric-europe-row.mric-you-row .mric-europe-fill {
+  background: linear-gradient(90deg, var(--teal), #00B8A0);
+}
+.v5 .mric-europe-val {
+  font-size: 12.5px; font-weight: 700; color: var(--fg-2);
+  text-align: right; font-variant-numeric: tabular-nums;
+}
+.v5 .mric-europe-row.mric-you-row .mric-europe-val { color: var(--accent); }
+.v5 .mric-europe p { font-size: 11.5px !important; color: var(--fg-4) !important; margin-top: 16px !important; line-height: 1.55 !important; }
+
+/* ========== DONUT + SHOCKS — FLUSH ========== */
+.v5 .mric-donut-shocks-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 36px;
+  padding: 12px 0 32px;
+  border-top: 1px solid var(--border-soft);
+}
+@container (min-width: 900px) {
+  .v5 .mric-donut-shocks-row {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    gap: 56px;
+    padding-top: 32px;
+  }
+}
+
+.v5 .mric-donut-section {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+.v5 .mric-donut-title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--fg-4);
+  margin-bottom: 18px;
+}
+.v5 .mric-donut-wrap {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+  align-items: center;
+}
+@container (min-width: 540px) { .v5 .mric-donut-wrap { grid-template-columns: 200px 1fr; } }
+.v5 .mric-donut-svg { display: block; margin: 0 auto; max-width: 200px; width: 100%; }
+.v5 .mric-donut-center .mric-dc-num {
+  font-size: 19px; font-weight: 800; fill: var(--fg);
+  font-family: ui-sans-serif, system-ui, sans-serif;
+}
+.v5 .mric-donut-center .mric-dc-lbl {
+  font-size: 9px; font-weight: 700; fill: var(--fg-4);
+  letter-spacing: 0.14em; text-transform: uppercase;
+}
+.v5 .mric-donut-legend { display: grid; grid-template-columns: 1fr; gap: 0; }
+.v5 .mric-donut-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border-faint);
+  font-size: 12px;
+}
+.v5 .mric-donut-item:last-child { border-bottom: none; }
+.v5 .mric-donut-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.v5 .mric-donut-name {
+  color: var(--fg-2); font-weight: 500;
+  font-size: 12.5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0;
+}
+.v5 .mric-donut-val {
+  color: var(--fg-2); font-weight: 700;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+}
+.v5 .mric-donut-pct { display: none; }
+.v5 .mric-donut-section p { font-size: 11.5px !important; color: var(--fg-4) !important; margin-top: 16px !important; line-height: 1.55 !important; }
+
+/* SHOCKS — flush, gros textes pull-quote */
+.v5 .mric-shocks {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+.v5 .mric-shock {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0 0 0 16px;
+  position: relative;
+  border-left: 2px solid var(--purple);
+  border-bottom: none;
+}
+.v5 .mric-shock:nth-child(2) { border-left-color: var(--accent); }
+.v5 .mric-shock:nth-child(3) { border-left-color: var(--gold); }
+.v5 .mric-shock::before { display: none; }
+.v5 .mric-shock-lbl {
+  font-size: 10px; font-weight: 800;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--purple);
+  margin-bottom: 6px;
+  font-family: ui-monospace, "SF Mono", monospace;
+}
+.v5 .mric-shock:nth-child(2) .mric-shock-lbl { color: var(--accent); }
+.v5 .mric-shock:nth-child(3) .mric-shock-lbl { color: var(--gold); }
+.v5 .mric-shock-txt {
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--fg-2);
+  font-weight: 500;
+}
+.v5 .mric-shock-txt strong {
+  color: var(--accent);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ========== TABLEAU DÉTAIL — flush, plus de card ========== */
+.v5 .mric-detail {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin-top: 16px;
+}
+.v5 .mric-detail-title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.v5 .mric-detail-sub {
+  font-size: 12.5px; color: var(--fg-4);
+  margin-bottom: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-soft);
+  line-height: 1.5;
+}
+.v5 .mric-detail-list {
+  display: grid; grid-template-columns: 1fr; gap: 0;
+}
+@container (min-width: 780px) {
+  .v5 .mric-detail-list { grid-template-columns: 1fr 1fr; column-gap: 40px; }
+}
+.v5 .mric-detail-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: baseline;
+  gap: 8px 16px;
+  padding: 12px 0 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .mric-detail-row:last-child { border-bottom: none; }
+.v5 .mric-detail-name {
+  font-size: 13px; color: var(--fg-2);
+  font-weight: 600; min-width: 0;
+  grid-column: 1; grid-row: 1;
+}
+.v5 .mric-detail-name small {
+  display: block;
+  font-size: 11px; color: var(--fg-4);
+  margin-top: 3px; font-weight: 400;
+  line-height: 1.4;
+}
+.v5 .mric-detail-val {
+  font-size: 14px; font-weight: 800; color: var(--fg);
+  white-space: nowrap; font-variant-numeric: tabular-nums;
+  grid-column: 2; grid-row: 1;
+}
+.v5 .mric-detail-val.mric-tiny { color: var(--orange); font-size: 13px; }
+.v5 .mric-detail-bar {
+  grid-column: 1 / -1; grid-row: 2;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+  position: relative;
+}
+.v5[data-theme="light"] .mric-detail-bar { background: rgba(0, 0, 0, 0.05); }
+.v5 .mric-detail-bar span {
+  display: block;
+  height: 100%;
+  width: var(--pct, 0%);
+  background: var(--bar-color, var(--teal));
+  border-radius: 2px;
+  transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--bar-color, var(--teal)) 30%, transparent);
+}
+
+/* ========== SUMMARY — flush, just left border accent ========== */
+.v5 .qblock {
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  padding: 6px 0 6px 20px;
+  margin-top: 32px;
+  font-size: 15px;
+  color: var(--fg-2);
+  line-height: 1.75;
+}
+.v5 .qblock strong { color: var(--fg); font-weight: 700; }
+
+/* ========== SHARE — flush ========== */
+.v5 .mric-share {
+  padding: 24px 0 0;
+  margin-top: 24px;
+  border-top: 1px solid var(--border-soft);
+}
+.v5 .mric-share-lbl {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--fg-4);
+  margin-bottom: 14px;
+}
+.v5 .mric-share-actions {
+  display: flex; flex-wrap: wrap; align-items: center;
+  gap: 14px;
+  justify-content: space-between;
+}
+.v5 .mric-share-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.v5 .mric-share-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  background: #3b82f6;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 13px; font-weight: 700;
+  letter-spacing: -0.005em;
+  transition: all .18s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 12px rgba(59,130,246,0.25);
+}
+.v5 .mric-share-cta:hover { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(59,130,246,0.35); }
+.v5 .mric-share-cta:active { transform: translateY(0); }
+.v5 .mric-share-cta svg { width: 14px; height: 14px; transition: transform .18s; flex-shrink: 0; }
+.v5 .mric-share-cta:hover svg { transform: translateX(3px); }
+@container (max-width: 540px) {
+  .v5 .mric-share-cta { width: 100%; justify-content: center; padding: 12px 18px; font-size: 14px; }
+}
+.v5 .mric-share-btn {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  color: var(--fg-3);
+  padding: 0;
+  transition: all 0.15s ease;
+}
+.v5 .mric-share-btn:hover { border-color: var(--accent); color: var(--accent); }
+.v5 .mric-share-btn svg { width: 16px; height: 16px; fill: currentColor; }
+.v5 .mric-share-btn--copy {
+  width: auto; padding: 0 14px; gap: 8px; font-size: 12px; font-weight: 700;
+}
+.v5 .mric-share-btn--copy svg { width: 14px; height: 14px; }
+.v5 .mric-share-toast {
+  position: absolute; bottom: -26px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; font-weight: 600; color: var(--accent);
+  white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none;
+}
+.v5 .mric-share-toast.mric-show { opacity: 1; }
+.v5 .mric-share-native { display: none; }
+
+/* ========== LEAD MAGNET — CTA, garde un treatment subtil (gradient bg) ========== */
+.v5 .mric-lm {
+  padding: 28px 30px;
+  margin-top: 32px;
+  background:
+    radial-gradient(ellipse 60% 100% at 100% 0%, rgba(0, 245, 192, 0.10), transparent 60%),
+    var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.v5[data-theme="light"] .mric-lm {
+  background:
+    radial-gradient(ellipse 60% 100% at 100% 0%, rgba(0, 168, 120, 0.08), transparent 60%),
+    var(--bg-2);
+}
+.v5 .mric-lm::before { display: none; }
+.v5 .mric-lm-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.v5 .mric-lm-icon { width: 44px; height: 44px; border-radius: 10px; overflow: hidden; }
+.v5 .mric-lm-icon img { width: 100%; height: 100%; object-fit: cover; }
+.v5 .mric-lm-title { font-size: 16px; font-weight: 800; color: var(--fg); line-height: 1.3; letter-spacing: -0.01em; }
+.v5 .mric-lm-title span { color: var(--accent); }
+.v5 .mric-lm-desc { font-size: 13.5px; color: var(--fg-3); line-height: 1.6; margin: 0 0 16px; }
+.v5 .mric-lm-desc strong { color: var(--fg-2); font-weight: 600; }
+.v5 .mric-lm-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.v5 .mric-lm-fine { font-size: 11px; color: var(--fg-4); margin: 12px 0 0; }
+
+/* ========== GUIDES — flush ========== */
+.v5 .mric-guides {
+  padding: 24px 0 0;
+  border-top: 1px solid var(--border-soft);
+  margin-top: 32px;
+}
+.v5 .mric-guides-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.v5 .mric-guides-logo { height: 16px; }
+.v5[data-theme="light"] .mric-guides-logo { filter: invert(1) brightness(0.3); }
+.v5 .mric-guides-title {
+  font-size: 11px; font-weight: 800; color: var(--fg-4);
+  letter-spacing: 0.18em; text-transform: uppercase;
+}
+.v5 .mric-guides-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+@container (min-width: 720px) { .v5 .mric-guides-grid { grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0 24px; } }
+.v5 .mric-guide-link {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 0;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-soft);
+}
+@container (min-width: 720px) { .v5 .mric-guide-link { border-bottom: none; padding: 0; } }
+.v5 .mric-guide-icon { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
+.v5 .mric-guide-txt { flex: 1; }
+.v5 .mric-guide-txt strong { display: block; font-size: 13px; color: var(--fg-2); font-weight: 700; }
+.v5 .mric-guide-txt span { font-size: 11px; color: var(--fg-4); }
+.v5 .mric-guide-chevron { color: var(--fg-4); flex-shrink: 0; }
+.v5 .mric-guide-link:hover .mric-guide-txt strong { color: var(--accent); }
+
+/* ========== OTHER CALC — flush ========== */
+.v5 .mric-othercalc {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 24px 0 0;
+  margin-top: 24px;
+  border-top: 1px solid var(--border-soft);
+}
+.v5 .mric-othercalc::before { display: none; }
+.v5 .mric-othercalc-title {
+  font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--fg-4); margin-bottom: 14px;
+}
+.v5 .mric-othercalc-grid { display: grid; grid-template-columns: 1fr; gap: 0; }
+@container (min-width: 640px) { .v5 .mric-othercalc-grid { grid-template-columns: 1fr 1fr 1fr; } }
+.v5 .mric-othercalc-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  text-decoration: none;
+  border-bottom: 1px solid var(--border-soft);
+}
+@container (min-width: 640px) {
+  .v5 .mric-othercalc-item { padding: 8px 16px; border-bottom: none; border-right: 1px solid var(--border-soft); }
+  .v5 .mric-othercalc-item:nth-child(3n) { border-right: none; padding-right: 0; }
+  .v5 .mric-othercalc-item:nth-child(3n+1) { padding-left: 0; }
+}
+.v5 .mric-othercalc-name { font-size: 13px; color: var(--fg-2); font-weight: 700; line-height: 1.3; flex: 1; }
+.v5 .mric-othercalc-desc { font-size: 11px; color: var(--fg-4); display: none; }
+@container (min-width: 640px) { .v5 .mric-othercalc-desc { display: block; } }
+.v5 .mric-othercalc-item svg { width: 14px; height: 14px; color: var(--fg-4); flex-shrink: 0; }
+.v5 .mric-othercalc-item:hover .mric-othercalc-name { color: var(--accent); }
+
+/* ========== SECTIONS ÉDUCATIVES — flush également ========== */
+.v5 .dk { background: var(--bg); }
+.v5 .lt { background: var(--bg-3); border-top: 1px solid var(--border-soft); }
+.v5[data-theme="light"] .lt { background: var(--bg-2); }
+.v5 section .inn { padding-top: 64px; padding-bottom: 64px; }
+.v5 .stitle {
+  font-size: clamp(28px, 3.4vw, 42px);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  margin-bottom: 20px;
+  max-width: 800px;
+}
+.v5 .btxt {
+  font-size: 15.5px;
+  color: var(--fg-3);
+  line-height: 1.7;
+  margin-bottom: 18px;
+  max-width: 740px;
+}
+.v5 .btxt strong { color: var(--fg-2); font-weight: 600; }
+
+/* Les 3 piliers — flush en 3 col avec dividers, sans card */
+.v5 .srow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 32px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+@container (min-width: 780px) { .v5 .srow { grid-template-columns: repeat(3, 1fr); } }
+.v5 .scard {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 28px 24px 28px 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .scard:last-child { border-bottom: none; padding-right: 0; }
+@container (min-width: 780px) {
+  .v5 .scard {
+    border-bottom: none;
+    border-right: 1px solid var(--border-soft);
+    padding: 28px 28px 28px 0;
+  }
+  .v5 .scard:not(:first-child) { padding-left: 28px; }
+  .v5 .scard:last-child { border-right: none; padding-right: 0; }
+}
+.v5 .scard .num {
+  font-size: clamp(36px, 4.5vw, 56px);
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.04em;
+  margin-bottom: 14px;
+  line-height: 1;
+}
+.v5 .scard .lbl2 { font-size: 14px; color: var(--fg-3); line-height: 1.6; }
+.v5 .scard .lbl2 strong { color: var(--fg-2); display: block; margin-bottom: 5px; font-weight: 700; }
+
+/* 3 leviers — flush avec gros num */
+.v5 .cgrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  margin: 28px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+}
+@container (min-width: 780px) { .v5 .cgrid { grid-template-columns: repeat(3, 1fr); } }
+.v5 .card {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 28px 24px 28px 0;
+  display: flex; gap: 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .card:last-child { border-bottom: none; padding-right: 0; }
+@container (min-width: 780px) {
+  .v5 .card {
+    border-bottom: none;
+    border-right: 1px solid var(--border-soft);
+    padding: 28px 28px 28px 0;
+  }
+  .v5 .card:not(:first-child) { padding-left: 28px; }
+  .v5 .card:last-child { border-right: none; padding-right: 0; }
+}
+.v5 .cnum {
+  font-size: 36px; font-weight: 800;
+  color: var(--accent); line-height: 1;
+  flex-shrink: 0;
+  letter-spacing: -0.04em;
+}
+.v5 .card h3 { font-size: 17px; font-weight: 700; color: var(--fg); margin: 0 0 6px; letter-spacing: -0.005em; }
+.v5 .card p { font-size: 14px; color: var(--fg-3); line-height: 1.6; margin: 0; }
+
+/* Formula — flush avec left border */
+.v5 .mric-formula {
+  background: transparent;
+  border: none;
+  border-left: 3px solid var(--accent);
+  border-radius: 0;
+  padding: 6px 0 6px 22px;
+  margin: 24px 0;
+}
+.v5 .mric-formula::before { display: none; }
+.v5 .mric-formula p { color: var(--fg); margin: 0 0 12px; line-height: 1.55; font-weight: 700; font-size: 16px; }
+.v5 .mric-formula ul { padding-left: 16px; margin: 8px 0 0; list-style: none; }
+.v5 .mric-formula li {
+  color: var(--fg-3);
+  margin-bottom: 8px;
+  font-size: 14.5px;
+  padding-left: 14px;
+  position: relative;
+  line-height: 1.6;
+}
+.v5 .mric-formula li::before { content: "→"; position: absolute; left: 0; top: 0; color: var(--accent); }
+.v5 .mric-formula li strong { color: var(--fg-2); }
+
+/* ========== FAQ — flush ========== */
+.v5 .flist {
+  display: grid; gap: 0;
+  margin: 24px 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--border-soft);
+}
+.v5 .flist details {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.v5 .flist details[open] { background: transparent; }
+.v5 .flist summary {
+  padding: 18px 0;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--fg-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  list-style: none;
+}
+.v5 .flist summary::-webkit-details-marker { display: none; }
+.v5 .flist summary::after {
+  content: "+";
+  font-size: 22px; font-weight: 300;
+  color: var(--accent); margin-left: 14px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.v5 .flist details[open] summary::after { transform: rotate(45deg); }
+.v5 .flist .fans {
+  padding: 0 0 22px;
+  font-size: 14.5px;
+  color: var(--fg-3);
+  line-height: 1.75;
+}
+.v5 .flist .fans strong { color: var(--fg-2); font-weight: 600; }
+.v5 .flist .fans a { color: var(--accent); text-decoration: underline; }
+
+/* ========== MOBILE OVERRIDES (< 720px) ========== */
+@container (max-width: 720px) {
+  /* === FORMULAIRE FLUSH SUR MOBILE ===
+     Pas de card, pas de fond — utilise la pleine largeur sur le fond de la page */
+  .v5 .mric-form-col {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 18px 0 20px;
+  }
+  .v5 .mric-form-col::before { display: none; }
+  .v5 .mric-form-col .lbl {
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+    text-align: center;
+  }
+  .v5 .mric-sep {
+    text-align: center;
+  }
+  .v5 .mric-sep span::after {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .v5 .mric-input-wrap input,
+  .v5 .mric-input-wrap select {
+    background: rgba(255, 255, 255, 0.03);
+  }
+  .v5[data-theme="light"] .mric-input-wrap input,
+  .v5[data-theme="light"] .mric-input-wrap select { background: #fff; }
+  .v5 .mric-form-grid { gap: 12px; margin-bottom: 14px; }
+  .v5 .mric-field-hint { display: none; }
+
+  /* Hero result mobile — déjà flush et centré côté desktop, on n'override que les tailles */
+  .v5 .mric-result-block { margin-top: 24px; }
+  .v5 .mric-headline-card { padding: 24px 0 22px; }
+  .v5 .mric-headline-num { font-size: 52px; }
+  .v5 .mric-headline-sub { font-size: 13.5px; max-width: 320px; }
+  .v5 .mric-stat { padding: 14px 8px; }
+  .v5 .mric-stat-num { font-size: 19px; }
+  .v5 .mric-tfd { padding: 22px 0 8px; }
+  .v5 .mric-tfd-desc { max-width: 320px; }
+
+  /* === BREAKDOWN 3 ITEMS COMPACTS SUR MOBILE ===
+     Titre + montant inline (au lieu de tout empilé verticalement) */
+  .v5 .mric-breakdown { padding: 24px 0 28px; }
+  .v5 .mric-breakdown-item {
+    padding: 14px 0;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      "icon title amount"
+      "desc desc desc";
+    column-gap: 12px;
+    row-gap: 6px;
+    align-items: baseline;
+  }
+  .v5 .mric-breakdown-icon {
+    grid-area: icon;
+    margin-bottom: 0;
+    align-self: center;
+    width: 32px;
+    text-align: left;
+  }
+  .v5 .mric-breakdown-body {
+    display: contents;
+  }
+  .v5 .mric-breakdown-body strong {
+    grid-area: title;
+    font-size: 14.5px;
+    margin: 0;
+  }
+  .v5 .mric-breakdown-body span {
+    grid-area: desc;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--fg-4);
+  }
+  .v5 .mric-breakdown-amount {
+    grid-area: amount;
+    font-size: 20px;
+    padding-top: 0;
+    margin-top: 0;
+    border-top: none;
+    align-self: center;
+    white-space: nowrap;
+  }
+
+  /* Détail flush sur mobile aussi */
+  .v5 .mric-detail { padding: 0; }
+  .v5 .mric-detail-row { padding: 9px 0 10px; }
+  .v5 .mric-detail-name { font-size: 12.5px; }
+  .v5 .mric-detail-name small { font-size: 10.5px; }
+  .v5 .mric-detail-val { font-size: 13px; }
+  .v5 .mric-detail-bar { margin-top: 6px; height: 3px; }
+
+  .v5 .mric-breakdown-item { padding: 18px 0; }
+  .v5 .mric-breakdown-body strong { font-size: 16px; }
+  .v5 .mric-breakdown-amount { font-size: 24px; padding-top: 10px; margin-top: 12px; }
+
+  .v5 .mric-sep span { font-size: 18px; }
+  .v5 section .inn { padding-top: 44px; padding-bottom: 44px; }
+  .v5 .stitle { font-size: 24px; margin-bottom: 14px; }
+  .v5 .btxt { font-size: 14px; }
+  .v5 .scard, .v5 .card { padding-left: 0 !important; padding-right: 0 !important; }
+}
+
+/* ===== GATE — Prénom + email + RGPD pour recevoir le rapport ===== */
+.v5 .mric-gate-zone { position: relative; isolation: isolate; }
+.v5 .mric-gated-content {
+  filter: blur(3px) saturate(0.85) brightness(0.95);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: filter .6s ease, opacity .6s ease;
+  /* Limit the height of the blurred preview so the page isn't massive */
+  max-height: 720px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 98%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 70%, transparent 98%);
+}
+.v5 .mric-gate-zone.mric-unlocked .mric-gated-content {
+  filter: none;
+  pointer-events: auto;
+  user-select: auto;
+  -webkit-user-select: auto;
+  max-height: none;
+  overflow: visible;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+.v5 .mric-gate-overlay {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 40px 16px 0;
+  z-index: 5;
+  pointer-events: none; /* let the card handle pointer events */
+}
+.v5 .mric-gate-zone.mric-unlocked .mric-gate-overlay { display: none; }
+.v5 .mric-gate-card {
+  pointer-events: auto;
+  max-width: 520px; width: 100%;
+  background: linear-gradient(180deg, rgba(11,17,32,0.96) 0%, rgba(11,17,32,0.92) 100%);
+  border: 1px solid rgba(0,245,192,0.30);
+  border-radius: 18px;
+  padding: 32px 28px 26px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.55), 0 0 60px rgba(0,245,192,0.10);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  position: relative;
+  text-align: center;
+  animation: mric-gate-in .45s cubic-bezier(.2,.7,.2,1) both;
+}
+@keyframes mric-gate-in {
+  from { transform: translateY(14px); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.v5 .mric-gate-card::before {
+  content: "";
+  position: absolute; top: -1px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 3px;
+  background: linear-gradient(90deg, var(--teal), var(--orange));
+  border-radius: 2px;
+}
+.v5 .mric-gate-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--teal);
+  margin-bottom: 14px;
+}
+.v5 .mric-gate-card h3 {
+  font-size: clamp(20px, 2.4vw, 26px);
+  font-weight: 800; letter-spacing: -0.025em; line-height: 1.18;
+  color: #EFF4FF;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.v5 .mric-gate-card h3 em {
+  font-style: normal;
+  color: var(--teal);
+}
+.v5 .mric-gate-card > p {
+  font-size: 14px; line-height: 1.55;
+  color: #B8C5DC;
+  margin: 0 0 22px;
+  text-wrap: pretty;
+}
+.v5 .mric-gate-card > p em { font-style: italic; color: #ECF0F8; }
+.v5 .mric-gate-form {
+  display: flex; flex-direction: column; gap: 10px;
+  text-align: left;
+}
+.v5 .mric-gate-form input[type="text"],
+.v5 .mric-gate-form input[type="email"] {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  color: #FFF;
+  font: inherit; font-size: 15px;
+  transition: border-color .18s, background .18s, box-shadow .18s;
+}
+.v5 .mric-gate-form input::placeholder { color: rgba(184,197,220,0.5); }
+.v5 .mric-gate-form input:focus {
+  outline: none;
+  border-color: var(--teal);
+  background: rgba(0,245,192,0.04);
+  box-shadow: 0 0 0 3px rgba(0,245,192,0.10);
+}
+.v5 .mric-gate-form input[aria-invalid="true"] {
+  border-color: var(--red);
+  background: rgba(255,59,78,0.05);
+}
+.v5 .mric-gate-consent {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 12px; line-height: 1.45;
+  color: #B8C5DC;
+  margin: 4px 0 6px;
+  cursor: pointer;
+}
+.v5 .mric-gate-consent input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px; height: 16px;
+  margin: 2px 0 0;
+  accent-color: var(--teal);
+  cursor: pointer;
+}
+.v5 .mric-gate-consent.mric-invalid { color: var(--red); }
+.v5 .mric-gate-submit {
+  appearance: none; border: 0; cursor: pointer;
+  background: var(--teal); color: #0A0E18;
+  font: inherit; font-weight: 800; font-size: 15px; letter-spacing: 0.01em;
+  height: 52px;
+  border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  margin-top: 4px;
+  transition: filter .15s, transform .15s;
+}
+.v5 .mric-gate-submit:hover:not(:disabled) { filter: brightness(1.08); }
+.v5 .mric-gate-submit:active:not(:disabled) { transform: translateY(1px); }
+.v5 .mric-gate-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.v5 .mric-gate-submit svg { width: 16px; height: 16px; transition: transform .18s; }
+.v5 .mric-gate-submit:hover:not(:disabled) svg { transform: translateX(3px); }
+.v5 .mric-gate-status {
+  font-size: 12.5px;
+  margin: 4px 0 0;
+  min-height: 18px;
+  text-align: center;
+  color: var(--red);
+}
+.v5 .mric-gate-status.mric-status-loading { color: var(--teal); }
+.v5 .mric-gate-privacy {
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(184,197,220,0.7);
+  margin: -2px 0 6px;
+  padding: 0 2px;
+}
+.v5 .mric-gate-fine {
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: rgba(184,197,220,0.55);
+  margin: 18px 0 0;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* Success banner shown after unlock */
+.v5 .mric-gate-success {
+  display: none;
+  margin: 0 0 24px;
+  padding: 16px 20px;
+  border: 1px solid rgba(0,245,192,0.30);
+  background: linear-gradient(90deg, rgba(0,245,192,0.10), rgba(0,245,192,0.04));
+  border-radius: 12px;
+  color: #ECF0F8;
+  font-size: 14px;
+  line-height: 1.5;
+  align-items: flex-start;
+  gap: 12px;
+}
+.v5 .mric-gate-success.mric-show { display: flex; }
+.v5 .mric-gate-success-icon {
+  flex: 0 0 24px;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: var(--teal);
+  color: #0A0E18;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 14px;
+}
+.v5 .mric-gate-success strong { color: var(--teal); }
+
+@container (max-width: 720px) {
+  .v5 .mric-gate-card { padding: 26px 20px 22px; }
+  .v5 .mric-gate-card h3 { font-size: 20px; }
+  .v5 .mric-gated-content { max-height: 560px; }
+}
+
+
+
+/* ====================================================
+   V5 — COMPOSANTS SPÉCIFIQUES "Objectif financier"
+   (restylés dans le langage flush v5)
+   ==================================================== */
+
+/* champ masqué (switch de mode) */
+.v5 .mric-field-hidden { display: none; }
+
+/* Mode switcher */
+.v5 .mric-mode-switch {
+  display: flex; gap: 0; margin-bottom: 18px;
+  background: #050810; border: 1px solid var(--border);
+  border-radius: 10px; overflow: hidden;
+}
+.v5[data-theme="light"] .mric-mode-switch { background: var(--bg-3); }
+.v5 .mric-mode-btn {
+  flex: 1; padding: 11px 14px; border: none; cursor: pointer;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  background: transparent; color: var(--fg-4); font-family: inherit;
+  transition: all .2s; position: relative;
+}
+.v5 .mric-mode-btn.mric-active { background: rgba(0,245,192,0.08); color: var(--accent); }
+.v5 .mric-mode-btn.mric-active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+}
+.v5 .mric-mode-btn:hover:not(.mric-active) { color: var(--fg-2); }
+
+/* Presets */
+.v5 .mric-presets { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.v5 .mric-preset {
+  padding: 7px 13px; border-radius: 8px; border: 1px solid var(--border);
+  background: transparent; color: var(--fg-3); cursor: pointer;
+  font-size: 12px; font-weight: 600; font-family: inherit; transition: all .18s;
+}
+.v5 .mric-preset:hover { border-color: var(--accent); color: var(--accent); }
+.v5 .mric-preset.mric-active { border-color: var(--accent); color: var(--accent); background: rgba(0,245,192,0.08); }
+
+/* Hero result : eyebrow dynamique + grand chiffre teal */
+.v5 .mric-result-block::before { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+.v5 .mric-headline-card::before { content: none; }
+.v5 .mric-headline-eyebrow {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--fg-4); margin-bottom: 14px;
+}
+.v5 .mric-result-block .mric-headline-num {
+  color: var(--accent);
+  filter: drop-shadow(0 0 32px rgba(0,245,192,0.22));
+}
+
+/* Stats : variante 2 colonnes */
+.v5 .mric-stats-row.mric-2 { grid-template-columns: 1fr 1fr; }
+.v5 .mric-stats-row.mric-2 .mric-stat { border-bottom: none; }
+.v5 .mric-stats-row.mric-2 .mric-stat:nth-child(2n) { border-right: none; }
+.v5 .mric-stat-num.mric-teal { color: var(--accent); }
+
+/* Barre versé / intérêts */
+.v5 .mric-bar-section { margin: 8px 0 4px; padding-top: 28px; border-top: 1px solid var(--border-soft); }
+.v5 .mric-bar-track {
+  display: flex; height: 30px; background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-soft); border-radius: 10px; overflow: hidden;
+}
+.v5[data-theme="light"] .mric-bar-track { background: rgba(0,0,0,0.04); }
+.v5 .mric-bar-fill { height: 100%; display: flex; align-items: center; justify-content: center; transition: width .8s cubic-bezier(.34,1.56,.64,1); overflow: hidden; min-width: 0; }
+.v5 .mric-bar-v { background: #2A3F5C; }
+.v5 .mric-bar-i { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+.v5 .mric-bar-pct { color: #fff; font-weight: 800; font-size: 11px; white-space: nowrap; padding: 0 8px; }
+.v5 .mric-bar-legend { display: flex; gap: 22px; margin-top: 12px; flex-wrap: wrap; }
+.v5 .mric-bar-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--fg-3); }
+.v5 .mric-bar-legend-item strong { color: var(--fg); font-weight: 700; font-variant-numeric: tabular-nums; }
+.v5 .mric-ldot { width: 8px; height: 8px; border-radius: 3px; flex-shrink: 0; }
+.v5 .mric-ldot-v { background: #2A3F5C; }
+.v5 .mric-ldot-i { background: var(--teal); }
+
+/* Graphe */
+.v5 .mric-chart-wrap { margin: 26px 0 4px; padding-top: 28px; border-top: 1px solid var(--border-soft); }
+.v5 .mric-chart-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.v5 .mric-chart-title { font-size: 11px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; color: var(--fg-4); }
+.v5 #mric-chart { width: 100%; border-radius: 12px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.02); }
+.v5[data-theme="light"] #mric-chart { background: rgba(0,0,0,0.02); }
+
+/* Tableau pleine largeur */
+.v5 .mric-table-full { padding: 36px 24px 8px; border-top: 1px solid var(--border-soft); margin-top: 8px; }
+.v5 .mric-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.v5 .mric-table { width: 100%; border-collapse: collapse; }
+.v5 .mric-table thead { background: transparent; }
+.v5 .mric-table th {
+  padding: 12px 14px; text-align: right; color: var(--fg-4); font-weight: 700;
+  white-space: nowrap; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+}
+.v5 .mric-table th:first-child { text-align: center; }
+.v5 .mric-table td {
+  padding: 11px 14px; text-align: right; white-space: nowrap; font-size: 13px;
+  border-bottom: 1px solid var(--border-faint); color: var(--fg-3); font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.v5 .mric-table td:first-child { text-align: center; font-weight: 700; color: var(--fg); }
+.v5 .mric-table td:last-child { font-weight: 700; color: var(--accent); }
+.v5 .mric-table tbody tr:hover { background: rgba(0,245,192,0.03); }
+.v5[data-theme="light"] .mric-table tbody tr:hover { background: rgba(0,168,120,0.05); }
+
+@container (max-width: 720px) {
+  .v5 .mric-table-full { padding-left: 0; padding-right: 0; }
+  .v5 .mric-chart-wrap, .v5 .mric-bar-section { padding-top: 24px; }
+}
+
+/* ===== Lead magnet : CTA inline (visible, sans flou) ===== */
+.v5 .mric-cta-lm { padding-top: 28px; margin-top: 8px; border-top: 1px solid var(--border-soft); }
+.v5 .mric-gate-card.mric-gate-inline { margin: 0 auto; }
+.v5 .mric-gate-success { margin: 0 auto; max-width: 520px; }
+
+
+
+/* ===== Composants spécifiques "Crédit immobilier" (v5 flush) ===== */
+.v5 .mric-stats-row.mric-3 { grid-template-columns: 1fr 1fr 1fr; }
+.v5 .mric-stats-row.mric-3 .mric-stat { border-bottom: none; }
+.v5 .mric-stats-row.mric-3 .mric-stat:last-child { border-right: none; }
+@container (max-width: 540px) {
+  .v5 .mric-stats-row.mric-3 { grid-template-columns: 1fr; }
+  .v5 .mric-stats-row.mric-3 .mric-stat { border-right: none; border-bottom: 1px solid var(--border-soft); }
+  .v5 .mric-stats-row.mric-3 .mric-stat:last-child { border-bottom: none; }
+}
+/* barre capital (teal) vs intérêts (orange = coût) */
+.v5 .mric-bar-v { background: linear-gradient(90deg, var(--teal), var(--blue)); }
+.v5 .mric-bar-i { background: linear-gradient(90deg, #FF9F43, #FF6B5B); }
+.v5 .mric-ldot-v { background: var(--teal); }
+.v5 .mric-ldot-i { background: #FF9F43; }
+/* phrase contextuelle */
+.v5 .mric-contextual { font-size: 13px; font-style: italic; color: var(--fg-4); line-height: 1.5; margin: 0 0 18px; padding-bottom: 16px; border-bottom: 1px solid var(--border-soft); }
+.v5 .mric-contextual strong { color: var(--fg-2); font-style: normal; font-weight: 700; }
+
+.v5 .mric-cash-toggle { grid-column: 1 / -1; margin: 2px 0 -2px; }
+.v5 .mric-cash-toggle label { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--fg-2); cursor: pointer; }
+.v5 .mric-cash-toggle input { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; flex: 0 0 18px; }
+</style>
+
+<div class="mric-calc v5" data-share-url="https://moneyradar.org/simulateur-credit-immobilier/">
+
+  <section class="mric-hero"><div class="inn">
+    <img src="https://moneyradar.org/lp4/wp-content/themes/astra-child/assets/images/moneyradar-logo.webp" alt="MoneyRadar" class="mric-hero-logo">
+    <h1>Calculateur de <em>crédit immobilier</em></h1>
+    <p class="mric-hero-sub">Mensualité, capacité d'emprunt ou durée : choisissez ce que vous voulez calculer. Le simulateur vous donne aussi le coût total des intérêts et le tableau d'amortissement.</p>
+  </div></section>
+
+  <section class="dk mric-tool-section"><div class="inn-wide"><div class="mric-tool-grid">
+
+        <div class="mric-form-col">
+          <div class="mric-mode-switch">
+            <button class="mric-mode-btn mric-active" data-mode="mensualite" type="button">Mensualité</button>
+            <button class="mric-mode-btn" data-mode="capacite" type="button">Capacité</button>
+            <button class="mric-mode-btn" data-mode="duree" type="button">Durée</button>
+          </div>
+          <p class="mric-contextual" id="mric-contextual"></p>
+          <span class="lbl">Paramètres</span>
+          <div class="mric-form-grid">
+            <div class="mric-field" id="mric-field-capital"><label for="mric-capital">Capital emprunté</label><div class="mric-input-wrap"><input type="text" id="mric-capital" value="250000" inputmode="decimal"><span class="mric-input-suffix">&euro;</span></div></div>
+            <div class="mric-field"><label for="mric-taux">Taux d'intérêt annuel</label><div class="mric-input-wrap"><input type="text" id="mric-taux" value="3.5" inputmode="decimal"><span class="mric-input-suffix">%</span></div></div>
+            <div class="mric-field" id="mric-field-assurance"><label for="mric-assurance">Assurance emprunteur</label><div class="mric-input-wrap"><input type="text" id="mric-assurance" value="0.34" inputmode="decimal"><span class="mric-input-suffix">%</span></div></div>
+            <div class="mric-field" id="mric-field-duree"><label for="mric-duree">Durée de remboursement</label><div class="mric-input-wrap"><input type="text" id="mric-duree" value="20" inputmode="decimal"><span class="mric-input-suffix">ans</span></div></div>
+            <div class="mric-field" id="mric-field-mensualite"><label for="mric-mensualite">Montant de la mensualité</label><div class="mric-input-wrap"><input type="text" id="mric-mensualite" value="1500" inputmode="decimal"><span class="mric-input-suffix">&euro;</span></div></div>
+            <div class="mric-cash-toggle mric-field-hidden" id="mric-toggle-revenus"><label><input type="checkbox" id="mric-par-revenus"> Estimer à partir de mes revenus (35 %)</label></div>
+            <div class="mric-field mric-field-hidden" id="mric-field-revenu"><label for="mric-revenu">Revenu net mensuel (foyer)</label><div class="mric-input-wrap"><input type="text" id="mric-revenu" value="3500" inputmode="decimal"><span class="mric-input-suffix">&euro;</span></div></div>
+            <div class="mric-field mric-field-hidden" id="mric-field-charges"><label for="mric-charges">Crédits en cours / mois</label><div class="mric-input-wrap"><input type="text" id="mric-charges" value="0" inputmode="decimal"><span class="mric-input-suffix">&euro;</span></div></div>
+          </div>
+          <button class="mric-btn" id="mric-btn-calculer" type="button">Calculer <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
+        </div>
+
+        <!-- COL DROITE : Résultats -->
+        <div class="mric-results-col">
+          <div class="mric-results" id="mric-results">
+
+            <!-- HERO RESULT -->
+            <div class="mric-result-block mric-anim">
+              <div class="mric-headline-card">
+                <div class="mric-headline-eyebrow" id="mric-hero-eyebrow">Votre mensualité</div>
+                <div class="mric-headline-num" id="mric-hero-num">—</div>
+                <div class="mric-headline-sub" id="mric-hero-sub"></div>
+              </div>
+              <div class="mric-stats-row mric-3">
+                <div class="mric-stat"><div class="mric-stat-num mric-white" id="mric-stat-cout">—</div><div class="mric-stat-lbl">Coût total du crédit</div></div>
+                <div class="mric-stat"><div class="mric-stat-num mric-orange" id="mric-stat-interets">—</div><div class="mric-stat-lbl">Intérêts totaux</div></div>
+                <div class="mric-stat"><div class="mric-stat-num mric-teal" id="mric-stat-part">—</div><div class="mric-stat-lbl">Intérêts / capital</div></div>
+              </div>
+            </div>
+
+            <!-- Bar capital vs intérêts -->
+            <div class="mric-bar-section mric-anim">
+              <div class="mric-bar-track">
+                <div class="mric-bar-fill mric-bar-v" id="mric-bar-v" style="width:0"><span class="mric-bar-pct" id="mric-pct-v"></span></div>
+                <div class="mric-bar-fill mric-bar-i" id="mric-bar-i" style="width:0"><span class="mric-bar-pct" id="mric-pct-i"></span></div>
+              </div>
+              <div class="mric-bar-legend">
+                <div class="mric-bar-legend-item"><span class="mric-ldot mric-ldot-v"></span><span>Capital emprunté</span> <strong id="mric-legend-v">—</strong></div>
+                <div class="mric-bar-legend-item"><span class="mric-ldot mric-ldot-i"></span><span>Intérêts (coût du crédit)</span> <strong id="mric-legend-i">—</strong></div>
+              </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="mric-chart-wrap mric-anim">
+              <div class="mric-chart-header"><span class="mric-chart-title">Ce que vous remboursez : capital vs intérêts</span></div>
+              <canvas id="mric-chart" height="240"></canvas>
+            </div>
+
+            <!-- Summary -->
+            <div class="qblock mric-anim" id="mric-summary"></div>
+
+            <!-- ===== LEAD MAGNET : optimiser son crédit ===== -->
+            <div class="mric-cta-lm mric-anim" id="mric-cta-lm">
+              <div class="mric-gate-card mric-gate-inline" id="mric-gate-card">
+                <span class="mric-gate-eyebrow">Plan crédit</span>
+                <h3>Recevez votre <em>plan pour payer votre crédit moins cher</em></h3>
+                <p>Comment réduire le coût total de votre prêt&nbsp;: leviers concrets sur le <em>taux, l'assurance emprunteur, la durée, le remboursement anticipé et la renégociation</em>. Chiffré pour votre crédit, envoyé par email.</p>
+                <form class="mric-gate-form" id="mric-gate-form" novalidate>
+                  <input type="text" id="mric-gate-company" name="company" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+                  <input type="email" id="mric-gate-email" placeholder="votre@email.fr" autocomplete="email" required>
+                  <p class="mric-gate-privacy">Données chiffrées et confidentielles, jamais cédées à des tiers.</p>
+                  <label class="mric-gate-consent" id="mric-gate-consent-label">
+                    <input type="checkbox" id="mric-gate-rgpd" required>
+                    <span>J'accepte de recevoir mon plan et la newsletter MoneyRadar. Désabonnement en 1 clic.</span>
+                  </label>
+                  <button type="submit" class="mric-gate-submit" id="mric-gate-submit">
+                    <span id="mric-gate-submit-label">Recevoir mon plan</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                  </button>
+                  <p class="mric-gate-status" id="mric-gate-status"></p>
+                </form>
+                <p class="mric-gate-fine">Gratuit · Aucune publicité · Sans engagement</p>
+              </div>
+              <div class="mric-gate-success" id="mric-gate-success">
+                <div class="mric-gate-success-icon">✓</div>
+                <div>Votre plan arrive sur <strong><span id="mric-gate-success-email">votre boîte mail</span></strong> d'ici 1 à 2 minutes. Pensez à vérifier vos spams.</div>
+              </div>
+            </div>
+
+            <!-- Share buttons -->
+            <div class="mric-share mric-anim mric-anim-d4" id="mric-share">
+              <div class="mric-share-lbl">Partager ce simulateur</div>
+              <button class="mric-share-btn mric-share-native" id="mric-share-native" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="fill:none"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                Partager
+              </button>
+              <div class="mric-share-row" id="mric-share-row">
+                <button class="mric-share-btn mric-share-btn--copy" data-platform="copy" type="button" title="Copier le lien">
+                  <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                  Copier
+                  <span class="mric-share-toast" id="mric-toast">Copié !</span>
+                </button>
+                <button class="mric-share-btn" data-platform="twitter" type="button" title="Partager sur X / Twitter">
+                  <svg viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                </button>
+                <button class="mric-share-btn" data-platform="facebook" type="button" title="Partager sur Facebook">
+                  <svg viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                </button>
+                <button class="mric-share-btn" data-platform="whatsapp" type="button" title="Partager sur WhatsApp">
+                  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                </button>
+                <button class="mric-share-btn" data-platform="linkedin" type="button" title="Partager sur LinkedIn">
+                  <svg viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                </button>
+                <button class="mric-share-btn" data-platform="telegram" type="button" title="Partager sur Telegram">
+                  <svg viewBox="0 0 24 24"><path d="M11.944 0A12 12 0 000 12a12 12 0 0012 12 12 12 0 0012-12A12 12 0 0012 0a12 12 0 00-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 01.171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                </button>
+                <button class="mric-share-btn" data-platform="email" type="button" title="Envoyer par email">
+                  <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                </button>
+              </div>
+            </div>
+
+
+            <!-- Guides -->
+            <div class="mric-guides mric-anim mric-anim-d4">
+              <div class="mric-guides-head"><img src="https://moneyradar.org/lp4/wp-content/themes/astra-child/assets/images/moneyradar-logo.webp" alt="MoneyRadar" class="mric-guides-logo"><div class="mric-guides-title">Nos guides pour bien investir</div></div>
+              <div class="mric-guides-grid">
+                <a href="https://moneyradar.org/bourse/pea/meilleur-pea/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  <span class="mric-guide-txt"><strong>Meilleur PEA</strong><span>Comparatif des meilleurs PEA</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/assurance-vie/meilleure-assurance-vie/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                  <span class="mric-guide-txt"><strong>Meilleure assurance vie</strong><span>Comparatif des meilleurs contrats</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/dans-quoi-investir/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                  <span class="mric-guide-txt"><strong>Dans quoi investir</strong><span>Guide complet pour placer son argent</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/bourse/meilleur-broker/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+                  <span class="mric-guide-txt"><strong>Meilleur broker</strong><span>Comparatif des meilleurs courtiers</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/bourse/compte-titres/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <span class="mric-guide-txt"><strong>Meilleur compte-titres</strong><span>Comparatif des meilleurs CTO</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/guides/dca/" class="mric-guide-link" target="_blank" rel="noopener">
+                  <svg class="mric-guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+                  <span class="mric-guide-txt"><strong>Le DCA expliqué</strong><span>La stratégie des versements réguliers</span></span>
+                  <svg class="mric-guide-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+              </div>
+            </div>
+
+
+            <!-- Nos autres calculateurs -->
+            <div class="mric-othercalc mric-anim mric-anim-d4">
+              <div class="mric-othercalc-title">Nos autres calculateurs</div>
+              <div class="mric-othercalc-grid">
+                <a href="https://moneyradar.org/guides/interets-composes/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Intérêts Composés</div>
+                    <div class="mric-othercalc-desc">Simulez la croissance de votre épargne</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/simulateur-liberte-financiere/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Liberté Financière</div>
+                    <div class="mric-othercalc-desc">Quand pourrez-vous vivre de vos placements</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/simulateur-inflation-vs-investissement/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Inflation vs Investissement</div>
+                    <div class="mric-othercalc-desc">Simulez l'érosion de votre épargne</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/simulateur-valeur-temps/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Valeur du Temps</div>
+                    <div class="mric-othercalc-desc">Combien vaut vraiment 1 h de votre temps</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/simulateur-riche-pour-age/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Riche pour votre âge</div>
+                    <div class="mric-othercalc-desc">Votre rang dans la distribution patrimoniale</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+                <a href="https://moneyradar.org/simulateur-runway/" class="mric-othercalc-item">
+                  <div>
+                    <div class="mric-othercalc-name">Runway</div>
+                    <div class="mric-othercalc-desc">Combien de temps tiendrez-vous sans salaire</div>
+                  </div>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div></div>
+
+    <div class="mric-table-full">
+      <div class="mric-table-container" id="mric-table-container" style="max-width:1100px;margin:0 auto">
+        <div class="mric-table-scroll">
+          <table class="mric-table">
+            <thead><tr><th>Année</th><th>Capital remboursé (cumul)</th><th>Intérêts payés (cumul)</th><th>Capital restant dû</th></tr></thead>
+            <tbody id="mric-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ÉVOLUTION DES TAUX (evergreen) ===== -->
+  <section class="lt">
+    <div class="inn">
+      <span class="lbl">Perspective</span>
+      <h2 class="stitle">Comment les taux immobiliers évoluent</h2>
+      <p class="btxt">Le taux de votre crédit dépend avant tout de l'époque où vous empruntez. Les taux immobiliers sont <strong>cycliques</strong> : ils ont connu des plus bas historiques, puis une remontée brutale. Voici les grandes étapes des dernières décennies (taux moyens, hors assurance) :</p>
+      <div class="srow">
+        <div class="scard"><div class="num">~9 %</div><div class="lbl2"><strong>Début des années 1990</strong><br>Taux élevés, parfois à deux chiffres.</div></div>
+        <div class="scard"><div class="num">~4-5 %</div><div class="lbl2"><strong>Années 2000</strong><br>Le niveau « normal » d'avant-crise.</div></div>
+        <div class="scard"><div class="num">&lt; 2 %</div><div class="lbl2"><strong>À partir de 2016</strong><br>Baisse continue, crédit bon marché.</div></div>
+        <div class="scard"><div class="num">~1,1 %</div><div class="lbl2"><strong>Fin 2021</strong><br>Plancher historique, jamais vu.</div></div>
+        <div class="scard"><div class="num">~4,2 %</div><div class="lbl2"><strong>Fin 2023</strong><br>Remontée brutale avec l'inflation.</div></div>
+        <div class="scard"><div class="num">~3-3,5 %</div><div class="lbl2"><strong>Depuis 2024</strong><br>Stabilisation après le pic.</div></div>
+      </div>
+      <div class="qblock"><strong>Ce qu'il faut en retenir :</strong> ne tenez pas le taux du moment pour acquis sur toute la durée. Pour une simulation honnête, testez plusieurs hypothèses (par exemple un taux légèrement au-dessus de celui annoncé par votre banque) et regardez l'impact sur le coût total.</div>
+    </div>
+  </section>
+
+  <!-- ===== TAUX D'USURE (concept, evergreen) ===== -->
+  <section class="dk">
+    <div class="inn">
+      <h2 class="stitle">Le taux d'usure : le plafond légal</h2>
+      <p class="btxt">Quelle que soit la période, votre crédit est encadré par le <strong>taux d'usure</strong> : le TAEG maximum (taux + assurance + frais) au-delà duquel une banque n'a légalement pas le droit de prêter.</p>
+      <p class="btxt">Il est <strong>recalculé chaque trimestre par la Banque de France</strong>, à partir de la moyenne des taux réellement pratiqués, majorée d'un tiers. C'est souvent lui qui explique un refus de prêt : si votre <strong>assurance emprunteur</strong> est élevée (âge, état de santé), le TAEG peut dépasser l'usure même avec un bon taux nominal.</p>
+      <div class="qblock">Les seuils dépendent de la durée du prêt et changent tous les 3 mois. Vous trouvez les valeurs à jour sur le site de la <strong>Banque de France</strong> (rubrique « taux d'usure »).</div>
+    </div>
+  </section>
+
+  <section class="lt">
+    <div class="inn">
+      <h2 class="stitle">Comprendre votre crédit immobilier</h2>
+      <p class="btxt">Chaque mensualité se divise en deux : une part qui rembourse le <strong>capital</strong> emprunté, et une part qui paie les <strong>intérêts</strong> à la banque. Au début du prêt, la part d'intérêts est très élevée ; elle diminue au fil du temps tandis que la part de capital augmente.</p>
+      <p class="btxt">C'est pour ça que les premières années, votre capital restant dû baisse lentement : vous payez surtout des intérêts. Le <strong>coût total du crédit</strong>, c'est la somme de tous ces intérêts, et il peut représenter une part importante du capital emprunté.</p>
+      <div class="qblock"><strong>La règle clé :</strong> plus la durée est longue, plus la mensualité est basse… mais plus le coût total en intérêts est élevé. C'est l'arbitrage central de tout crédit immobilier.</div>
+    </div>
+  </section>
+
+  <section class="dk">
+    <div class="inn">
+      <h2 class="stitle">Réduire le coût de votre crédit</h2>
+      <div class="cgrid">
+        <div class="card"><div class="cnum">1</div><div><h3>Négocier le taux</h3><p>Quelques dixièmes de point sur le taux représentent des milliers d'euros sur la durée. Faites jouer la concurrence et un courtier.</p></div></div>
+        <div class="card"><div class="cnum">2</div><div><h3>Optimiser l'assurance emprunteur</h3><p>Elle peut peser jusqu'à un tiers du coût du crédit. La déléguer (loi Lemoine) à un autre assureur fait souvent économiser plusieurs milliers d'euros.</p></div></div>
+        <div class="card"><div class="cnum">3</div><div><h3>Raccourcir la durée ou rembourser par anticipation</h3><p>Une durée plus courte augmente la mensualité mais réduit fortement les intérêts. Les remboursements anticipés attaquent directement le capital restant dû.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="lt">
+    <div class="inn">
+      <h2 class="stitle">Questions fréquentes</h2>
+      <div class="flist">
+        <details><summary>Comment est calculée la mensualité ?</summary><div class="fans">Par la formule d'amortissement constant : M = C × (t/12) ÷ (1 − (1 + t/12)^−n), où C est le capital, t le taux annuel et n le nombre de mois. La mensualité reste fixe, mais la répartition capital/intérêts évolue à chaque échéance.</div></details>
+        <details><summary>Ce calcul inclut-il l'assurance emprunteur ?</summary><div class="fans">Non, ce simulateur calcule la part « crédit » pure (capital + intérêts). L'assurance emprunteur s'ajoute à la mensualité réelle : comptez en général 0,10 % à 0,40 % du capital par an selon votre profil.</div></details>
+        <details><summary>« Capacité d'emprunt » : et le taux d'endettement ?</summary><div class="fans">Ce mode calcule le capital qu'une mensualité donnée permet d'emprunter. En pratique, les banques limitent la mensualité à ~35 % de vos revenus nets (assurance comprise) : c'est ce plafond qui détermine votre mensualité maximale.</div></details>
+        <details><summary>Le taux à indiquer, c'est le TAEG ?</summary><div class="fans">Indiquez le taux nominal du prêt (hors assurance et frais). Le TAEG, lui, intègre l'assurance et les frais : il est plus élevé et sert à comparer les offres. Pour le coût « pur » des intérêts, utilisez le taux nominal.</div></details>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var $=function(id){return document.getElementById(id);};
+  var currentMode='mensualite';
+  var resultsSection=$('mric-results');
+  var chartCanvas=$('mric-chart');
+  var modeBtns=document.querySelectorAll('.mric-calc .mric-mode-btn');
+  var parRevCb=$('mric-par-revenus');
+  var fields={capital:$('mric-field-capital'),duree:$('mric-field-duree'),mensualite:$('mric-field-mensualite'),revenu:$('mric-field-revenu'),charges:$('mric-field-charges'),toggle:$('mric-toggle-revenus')};
+
+  function num(id){var el=$('mric-'+id);if(!el)return 0;var v=parseFloat(String(el.value).replace(/[\s  ]/g,'').replace(',','.'));return isNaN(v)?0:Math.max(0,v);}
+  function fEuro(n){return Math.round(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:0,maximumFractionDigits:0});}
+  function fEuro2(n){return n.toLocaleString('fr-FR',{style:'currency',currency:'EUR',minimumFractionDigits:2,maximumFractionDigits:2});}
+  function fCompact(n){var s=n<0?'−':'';n=Math.abs(n);if(n>=1e6)return s+(n/1e6).toFixed(1).replace('.',',')+' M€';if(n>=1e3)return s+Math.round(n/1e3)+' k€';return s+Math.round(n)+' €';}
+  function fDuree(mois){var a=Math.floor(mois/12),m=Math.round(mois%12);if(a===0)return m+' mois';if(m===0)return a+' an'+(a>1?'s':'');return a+' an'+(a>1?'s':'')+' et '+m+' mois';}
+  function show(el){el.classList.remove('mric-field-hidden');}
+  function hide(el){el.classList.add('mric-field-hidden');}
+
+  function applyMode(){
+    var parRev=!!(parRevCb&&parRevCb.checked);
+    [fields.capital,fields.duree,fields.mensualite,fields.revenu,fields.charges,fields.toggle].forEach(show);
+    if(currentMode==='mensualite'){
+      hide(fields.mensualite);hide(fields.revenu);hide(fields.charges);hide(fields.toggle);
+    }else if(currentMode==='capacite'){
+      hide(fields.capital);
+      if(parRev){hide(fields.mensualite);}else{hide(fields.revenu);hide(fields.charges);}
+    }else{ // duree
+      hide(fields.duree);hide(fields.revenu);hide(fields.charges);hide(fields.toggle);
+    }
+  }
+
+  function contextual(){
+    var c=num('capital'),t=num('taux'),d=num('duree'),m=num('mensualite');
+    var cT=c?fEuro(c):'X €',tT=t?(t.toString().replace('.',',')+' %'):'X %',dT=d?d+' ans':'X ans',mT=m?fEuro(m):'X €';
+    var p='';
+    if(currentMode==='mensualite')p="J'emprunte <strong>"+cT+"</strong> à <strong>"+tT+"</strong> sur <strong>"+dT+"</strong> : quelle mensualité et quel coût total ?";
+    else if(currentMode==='capacite')p="Combien puis-je emprunter à <strong>"+tT+"</strong> sur <strong>"+dT+"</strong> "+((parRevCb&&parRevCb.checked)?"avec mes revenus ?":"avec <strong>"+mT+"</strong>/mois ?");
+    else p="J'emprunte <strong>"+cT+"</strong> à <strong>"+tT+"</strong> avec <strong>"+mT+"</strong>/mois : en combien de temps ?";
+    $('mric-contextual').innerHTML=p;
+  }
+
+  function showMsg(html){
+    $('mric-hero-eyebrow').textContent='À compléter';
+    $('mric-hero-num').textContent='—';$('mric-hero-num').style.color='var(--fg-3)';
+    $('mric-hero-sub').innerHTML=html;
+    $('mric-stat-cout').textContent='—';$('mric-stat-interets').textContent='—';$('mric-stat-part').textContent='—';
+    resultsSection.classList.add('mric-visible');
+  }
+
+  function drawChart(rows){
+    var ctx=chartCanvas.getContext('2d');var dpr=window.devicePixelRatio||1;var rect=chartCanvas.getBoundingClientRect();var h=240;
+    chartCanvas.width=Math.max(1,Math.round(rect.width*dpr));chartCanvas.height=Math.round(h*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+    var w=rect.width,pT=26,pB=30,pL=54,pR=96,pW=w-pL-pR,pH=h-pT-pB;ctx.clearRect(0,0,w,h);
+    if(!rows||rows.length<2)return;
+    var FONT="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif",TEAL="#00F5C0",ORANGE="#FF9F43";
+    var n=rows.length,mx=0;for(var k=0;k<n;k++){mx=Math.max(mx,rows[k].p,rows[k].int);}mx=mx*1.12||1;
+    function X(idx){return pL+(idx/(n-1||1))*pW;}function Y(v){return pT+pH-(v/mx)*pH;}
+    ctx.lineWidth=1;ctx.font="600 11px "+FONT;ctx.textBaseline="middle";
+    for(var g=0;g<=4;g++){var gy=pT+(pH/4)*g;ctx.strokeStyle="rgba(255,255,255,0.06)";ctx.beginPath();ctx.moveTo(pL,gy);ctx.lineTo(pL+pW,gy);ctx.stroke();ctx.fillStyle="rgba(197,213,232,0.55)";ctx.textAlign="right";ctx.fillText(fCompact(mx-(mx/4)*g),pL-10,gy);}
+    var cap=[],intr=[];for(var p=0;p<n;p++){cap.push({x:X(p),y:Y(rows[p].p)});intr.push({x:X(p),y:Y(rows[p].int)});}
+    function tr(pts){ctx.moveTo(pts[0].x,pts[0].y);for(var i2=1;i2<pts.length;i2++){var xc=(pts[i2-1].x+pts[i2].x)/2,yc=(pts[i2-1].y+pts[i2].y)/2;ctx.quadraticCurveTo(pts[i2-1].x,pts[i2-1].y,xc,yc);}ctx.lineTo(pts[pts.length-1].x,pts[pts.length-1].y);}
+    ctx.beginPath();tr(cap);for(var r=intr.length-1;r>=0;r--){ctx.lineTo(intr[r].x,intr[r].y);}ctx.closePath();
+    var grad=ctx.createLinearGradient(pL,0,pL+pW,0);grad.addColorStop(0,"rgba(0,245,192,0.02)");grad.addColorStop(1,"rgba(0,245,192,0.14)");ctx.fillStyle=grad;ctx.fill();
+    ctx.beginPath();tr(intr);ctx.strokeStyle=ORANGE;ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.lineCap="round";ctx.stroke();
+    ctx.save();ctx.shadowColor="rgba(0,245,192,0.5)";ctx.shadowBlur=14;ctx.beginPath();tr(cap);ctx.strokeStyle=TEAL;ctx.lineWidth=3;ctx.lineJoin="round";ctx.lineCap="round";ctx.stroke();ctx.restore();
+    var ce=cap[n-1],ie=intr[n-1];
+    ctx.fillStyle="rgba(0,245,192,0.18)";ctx.beginPath();ctx.arc(ce.x,ce.y,9,0,7);ctx.fill();ctx.fillStyle=TEAL;ctx.beginPath();ctx.arc(ce.x,ce.y,4.5,0,7);ctx.fill();
+    ctx.fillStyle="rgba(255,159,67,0.18)";ctx.beginPath();ctx.arc(ie.x,ie.y,9,0,7);ctx.fill();ctx.fillStyle=ORANGE;ctx.beginPath();ctx.arc(ie.x,ie.y,4.5,0,7);ctx.fill();
+    ctx.font="800 13px "+FONT;ctx.textAlign="left";ctx.textBaseline="middle";
+    ctx.fillStyle=TEAL;ctx.fillText(fCompact(rows[n-1].p),ce.x+12,ce.y);ctx.fillStyle=ORANGE;ctx.fillText(fCompact(rows[n-1].int),ie.x+12,ie.y);
+    ctx.fillStyle="rgba(197,213,232,0.55)";ctx.textAlign="center";ctx.textBaseline="top";ctx.font="600 10px "+FONT;
+    var xi=Math.max(1,Math.round((n-1)/6));for(var x=0;x<n;x++){if(x%xi!==0&&x!==n-1)continue;ctx.fillText(rows[x].y===0?"Départ":"An "+rows[x].y,X(x),pT+pH+10);}
+    var lx=pL+2,ly=pT+1;ctx.textAlign="left";ctx.textBaseline="middle";ctx.font="700 11px "+FONT;
+    ctx.fillStyle=TEAL;ctx.beginPath();ctx.arc(lx+4,ly+5,4,0,7);ctx.fill();ctx.fillStyle="rgba(230,240,255,0.9)";ctx.fillText("Capital remboursé",lx+14,ly+6);
+    ctx.fillStyle=ORANGE;ctx.beginPath();ctx.arc(lx+4,ly+21,4,0,7);ctx.fill();ctx.fillStyle="rgba(230,240,255,0.9)";ctx.fillText("Intérêts payés",lx+14,ly+22);
+  }
+
+  function calculer(){
+    contextual();
+    var capital=num('capital'),taux=num('taux'),dureeY=num('duree'),mens=num('mensualite'),assur=num('assurance'),revenu=num('revenu');
+    var parRev=!!(parRevCb&&parRevCb.checked);
+    var i=taux/12/100, assurR=assur/100;  // assurance annuelle sur capital initial
+    var n, mensCredit, mensSaisie=mens;
+
+    if(currentMode==='mensualite'){
+      if(capital<=0||dureeY<=0){showMsg('Renseignez le <strong>capital</strong>, le <strong>taux</strong> et la <strong>durée</strong>.');return;}
+      n=Math.round(dureeY*12);
+      mensCredit = i===0 ? capital/n : capital*i/(1-Math.pow(1+i,-n));
+    } else if(currentMode==='capacite'){
+      if(dureeY<=0){showMsg('Renseignez le <strong>taux</strong> et la <strong>durée</strong>.');return;}
+      var charges=num('charges');
+      var Mtot;
+      if(parRev){
+        if(revenu<=0){showMsg('Renseignez votre <strong>revenu net mensuel</strong>.');return;}
+        Mtot = 0.35*revenu - charges;
+        if(Mtot<=0){showMsg('Vos crédits en cours (<strong>'+fEuro(charges)+'</strong>/mois) atteignent déjà 35 % de vos revenus : votre capacité d\'emprunt supplémentaire est nulle.');return;}
+      } else {
+        if(mens<=0){showMsg('Renseignez la <strong>mensualité</strong>.');return;}
+        Mtot = mens;
+      }
+      n=Math.round(dureeY*12);
+      var pmtF = i===0 ? 1/n : i/(1-Math.pow(1+i,-n));
+      capital = Mtot / (pmtF + assurR/12);          // assurance comprise dans la mensualité
+      mensCredit = capital*pmtF; mensSaisie=Mtot;
+    } else { // duree
+      if(capital<=0||mens<=0){showMsg('Renseignez le <strong>capital</strong>, le <strong>taux</strong> et la <strong>mensualité</strong>.');return;}
+      var assurMois0 = assurR*capital/12;
+      mensCredit = mens - assurMois0;               // la mensualité saisie inclut l'assurance
+      if(mensCredit<=0){showMsg('Votre mensualité (<strong>'+fEuro(mens)+'</strong>) ne couvre même pas l\'assurance ('+fEuro(assurMois0)+'/mois). Augmentez-la.');return;}
+      if(i>0 && mensCredit<=capital*i){showMsg('Avec <strong>'+fEuro(mens)+'</strong>/mois (dont assurance), la part crédit ne couvre pas les intérêts ('+fEuro(capital*i)+'/mois) : le prêt ne se rembourserait jamais. Augmentez la mensualité.');return;}
+      n = i===0 ? capital/mensCredit : Math.log(mensCredit/(mensCredit-capital*i))/Math.log(1+i);
+      n=Math.ceil(n); dureeY=n/12;
+    }
+    if(!isFinite(n)||n<=0){showMsg('Paramètres invalides, vérifiez vos valeurs.');return;}
+
+    var assurMois = assurR*capital/12;
+    var mensReelle = mensCredit + assurMois;
+    var interets = Math.max(0, mensCredit*n - capital);
+    var assurTot = assurMois*n;
+    var coutCredit = interets + assurTot;           // ce que coûte le crédit (hors capital)
+
+    // Hero
+    if(currentMode==='mensualite'){
+      $('mric-hero-eyebrow').textContent='Votre mensualité (assurance comprise)';
+      $('mric-hero-num').textContent=fEuro2(mensReelle)+' /mois';
+      $('mric-hero-sub').innerHTML='Soit <strong>'+fEuro2(mensCredit)+'</strong> de crédit + <strong>'+fEuro2(assurMois)+'</strong> d\'assurance, pour <strong>'+fEuro(capital)+'</strong> sur <strong>'+fDuree(n)+'</strong>.';
+    } else if(currentMode==='capacite'){
+      $('mric-hero-eyebrow').textContent="Capacité d'emprunt";
+      $('mric-hero-num').textContent=fEuro(capital);
+      $('mric-hero-sub').innerHTML='Avec <strong>'+fEuro2(mensReelle)+'</strong>/mois (assurance comprise)'+(parRev?', soit 35 % de <strong>'+fEuro(revenu)+'</strong> de revenus'+(num('charges')>0?' moins <strong>'+fEuro(num('charges'))+'</strong> de crédits en cours':''):'')+', à <strong>'+taux.toString().replace('.',',')+' %</strong> sur <strong>'+fDuree(n)+'</strong>.';
+    } else {
+      $('mric-hero-eyebrow').textContent='Durée du prêt';
+      $('mric-hero-num').textContent=fDuree(n);
+      $('mric-hero-sub').innerHTML='Pour <strong>'+fEuro(capital)+'</strong> à <strong>'+taux.toString().replace('.',',')+' %</strong>, avec <strong>'+fEuro2(mensReelle)+'</strong>/mois (assurance comprise).';
+    }
+    $('mric-hero-num').style.color='var(--accent)';
+
+    $('mric-stat-cout').textContent=fEuro(coutCredit);
+    document.querySelector('#mric-stat-cout').nextElementSibling.textContent='Coût du crédit';
+    $('mric-stat-interets').textContent=fEuro(interets);
+    $('mric-stat-part').textContent=fEuro(assurTot);
+    document.querySelector('#mric-stat-part').nextElementSibling.textContent='Assurance';
+
+    // Bar : capital vs coût du crédit
+    var tot=capital+coutCredit;
+    var pV=tot>0?capital/tot*100:50, pI=tot>0?coutCredit/tot*100:50;
+    $('mric-bar-v').style.width=pV.toFixed(1)+'%';$('mric-bar-i').style.width=pI.toFixed(1)+'%';
+    $('mric-pct-v').textContent=Math.round(pV)+'%';$('mric-pct-i').textContent=Math.round(pI)+'%';
+    $('mric-legend-v').textContent=fEuro(capital);$('mric-legend-i').textContent=fEuro(coutCredit);
+    document.querySelector('#mric-legend-i').previousElementSibling.textContent='Coût du crédit (intérêts + assurance)';
+
+    // Amortissement (sur la part crédit)
+    var tb=$('mric-table-body');tb.innerHTML='';
+    var bal=capital,cumP=0,cumI=0,rows=[{y:0,p:0,int:0,bal:capital}],moisTot=Math.round(n);
+    for(var mo=1;mo<=moisTot;mo++){
+      var intMo=bal*i; var prinMo=mensCredit-intMo;
+      if(mo===moisTot)prinMo=bal;
+      if(prinMo>bal)prinMo=bal;
+      bal-=prinMo; if(bal<0)bal=0; cumP+=prinMo; cumI+=Math.max(0,intMo);
+      if(mo%12===0||mo===moisTot)rows.push({y:Math.ceil(mo/12),p:cumP,int:cumI,bal:bal});
+    }
+    for(var a=1;a<rows.length;a++){var rw=rows[a];var tr2=document.createElement('tr');tr2.innerHTML='<td>'+rw.y+'</td><td>'+fEuro(rw.p)+'</td><td>'+fEuro(rw.int)+'</td><td>'+fEuro(rw.bal)+'</td>';tb.appendChild(tr2);}
+
+    $('mric-summary').innerHTML='Pour <strong>'+fEuro(capital)+'</strong> empruntés à <strong>'+taux.toString().replace('.',',')+' %</strong> sur <strong>'+fDuree(n)+'</strong>, vous paierez <strong>'+fEuro2(mensReelle)+'</strong> par mois assurance comprise. Le crédit vous coûtera <strong style="color:#FF9F43">'+fEuro(coutCredit)+'</strong> en plus du capital, dont <strong>'+fEuro(interets)+'</strong> d\'intérêts et <strong>'+fEuro(assurTot)+'</strong> d\'assurance ('+(assur.toString().replace('.',',')||'0')+' %/an).';
+
+    resultsSection.classList.add('mric-visible');
+    var anims=resultsSection.querySelectorAll('.mric-anim');anims.forEach(function(el){el.style.animation='none';el.offsetHeight;el.style.animation='';});
+
+    window.__mricPretData={
+      inputs:{mode:currentMode,capital:capital,taux:taux,dureeAns:Math.round(n/12*10)/10,assurance:assur,parRevenus:parRev,revenu:parRev?revenu:0,chargesEnCours:(currentMode==='capacite'&&parRev?num('charges'):0)},
+      results:{mensualiteCredit:mensCredit,mensualiteReelle:mensReelle,capital:capital,dureeMois:n,interets:interets,assuranceTotale:assurTot,coutCredit:coutCredit},
+      meta:{calculator:'pret-immobilier',version:'v2',timestamp:new Date().toISOString()}
+    };
+    setTimeout(function(){drawChart(rows);},250);
+  }
+
+  modeBtns.forEach(function(btn){btn.addEventListener('click',function(){modeBtns.forEach(function(b){b.classList.remove('mric-active')});btn.classList.add('mric-active');currentMode=btn.getAttribute('data-mode');applyMode();calculer();});});
+  if(parRevCb)parRevCb.addEventListener('change',function(){applyMode();calculer();});
+
+  // ===== Share =====
+  var SHARE_URL=document.querySelector('.mric-calc').getAttribute('data-share-url')||window.location.href;
+  var SHARE_TITLE="Calculateur de crédit immobilier — MoneyRadar";
+  var SHARE_TEXT="Mensualité, capacité d'emprunt, durée : j'ai tout calculé avec ce simulateur de crédit immo gratuit :";
+  function copyLink(){var t=$('mric-toast');if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(SHARE_URL).then(function(){showToast(t)}).catch(function(){fb(t)});}else{fb(t)}}
+  function fb(t){var ta=document.createElement('textarea');ta.value=SHARE_URL;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');showToast(t)}catch(e){}document.body.removeChild(ta);}
+  function showToast(t){t.classList.add('mric-show');setTimeout(function(){t.classList.remove('mric-show')},2000);}
+  function shareTo(p){var u=encodeURIComponent(SHARE_URL);var t=encodeURIComponent(SHARE_TEXT+' '+SHARE_URL);var urls={twitter:'https://twitter.com/intent/tweet?url='+u+'&text='+encodeURIComponent(SHARE_TEXT),facebook:'https://www.facebook.com/sharer/sharer.php?u='+u,whatsapp:'https://wa.me/?text='+t,linkedin:'https://www.linkedin.com/sharing/share-offsite/?url='+u,telegram:'https://t.me/share/url?url='+u+'&text='+encodeURIComponent(SHARE_TEXT),email:'mailto:?subject='+encodeURIComponent(SHARE_TITLE)+'&body='+t};if(urls[p]){if(p==='email'){window.location.href=urls[p]}else{window.open(urls[p],'_blank','noopener,width=600,height=500')}}}
+  function nativeShare(){if(navigator.share){navigator.share({title:SHARE_TITLE,text:SHARE_TEXT,url:SHARE_URL}).catch(function(){});}}
+  var nativeBtn=$('mric-share-native'),shareRow=$('mric-share-row');
+  if(navigator.share&&nativeBtn){nativeBtn.classList.add('mric-has-api');if(shareRow)shareRow.classList.add('mric-has-native');}
+  if(nativeBtn)nativeBtn.addEventListener('click',nativeShare);
+  document.querySelectorAll('.mric-share-btn[data-platform]').forEach(function(btn){btn.addEventListener('click',function(){var p=this.getAttribute('data-platform');if(p==='copy'){copyLink()}else{shareTo(p)}});});
+
+  var rt;window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(function(){if(resultsSection.classList.contains('mric-visible'))calculer();},200);});
+  var obs=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)e.target.classList.add('mric-visible');});},{threshold:0.15,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.mric-calc section').forEach(function(s2){obs.observe(s2);});
+
+  $('mric-btn-calculer').addEventListener('click',calculer);
+  applyMode();calculer();
+})();
+
+/* ===== LEAD MAGNET — Submit handler (Worker) ===== */
+(function(){
+  'use strict';
+  var ENDPOINT=window.MRIC_WORKER_ENDPOINT||'https://mric-rapport-impots.lingering-frost-26a0.workers.dev';
+  var form=document.getElementById('mric-gate-form'),card=document.getElementById('mric-gate-card'),success=document.getElementById('mric-gate-success'),successEmail=document.getElementById('mric-gate-success-email'),emailEl=document.getElementById('mric-gate-email'),rgpdEl=document.getElementById('mric-gate-rgpd'),companyEl=document.getElementById('mric-gate-company'),consentLabel=document.getElementById('mric-gate-consent-label'),btn=document.getElementById('mric-gate-submit'),status=document.getElementById('mric-gate-status');
+  if(!form)return;
+  function isValidEmail(s3){return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(s3||'').trim());}
+  function unlock(email){if(card)card.style.display='none';successEmail.textContent=email;success.classList.add('mric-show');setTimeout(function(){success.scrollIntoView({behavior:'smooth',block:'center'})},150);}
+  form.addEventListener('submit',function(ev){
+    ev.preventDefault();
+    var email=(emailEl.value||'').trim(),consent=!!rgpdEl.checked;
+    emailEl.removeAttribute('aria-invalid');consentLabel.classList.remove('mric-invalid');
+    if(!isValidEmail(email)){emailEl.setAttribute('aria-invalid','true');emailEl.focus();status.textContent='Email invalide.';return;}
+    if(!consent){consentLabel.classList.add('mric-invalid');status.textContent='Vous devez accepter pour recevoir le plan.';return;}
+    var data=window.__mricPretData||{};
+    var payload={email:email,consent:true,consentTimestamp:new Date().toISOString(),calculator:'pret-immobilier',inputs:data.inputs||{},results:data.results||{},meta:data.meta||{},company:(companyEl&&companyEl.value)||''};
+    btn.disabled=true;unlock(email);
+    fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true}).then(function(res){if(!res.ok)console.warn('[MRIC lead] Worker HTTP '+res.status);}).catch(function(err){console.warn('[MRIC lead] Worker error:',err);});
+  });
+})();
+</script>
+
